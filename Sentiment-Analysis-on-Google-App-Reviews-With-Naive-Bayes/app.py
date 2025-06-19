@@ -19,12 +19,22 @@ import os
 # --- Download NLTK resource ---
 NLTK_DATA_DIR = os.path.join(os.path.dirname(__file__), 'nltk_data')
 os.makedirs(NLTK_DATA_DIR, exist_ok=True)
-
-nltk.download('punkt', download_dir=NLTK_DATA_DIR)
-nltk.download('stopwords', download_dir=NLTK_DATA_DIR)
-nltk.download('wordnet', download_dir=NLTK_DATA_DIR)
-
 nltk.data.path.append(NLTK_DATA_DIR)
+
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt', download_dir=NLTK_DATA_DIR)
+
+try:
+    nltk.data.find('corpora/stopwords')
+except LookupError:
+    nltk.download('stopwords', download_dir=NLTK_DATA_DIR)
+
+try:
+    nltk.data.find('corpora/wordnet')
+except LookupError:
+    nltk.download('wordnet', download_dir=NLTK_DATA_DIR)
 # --- Setup preprocessing tools ---
 stop_words_en = set(stopwords.words('english'))
 lemmatizer = WordNetLemmatizer()
