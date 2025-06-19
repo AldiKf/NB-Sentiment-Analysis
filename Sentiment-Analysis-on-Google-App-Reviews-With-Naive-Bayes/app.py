@@ -7,7 +7,7 @@ import nltk
 from deep_translator import GoogleTranslator
 import matplotlib.pyplot as plt
 from wordcloud import WordCloud, STOPWORDS
-from nltk.tokenize import word_tokenize
+from nltk.tokenize import RegexpTokenizer
 from nltk.corpus import stopwords
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 from nltk.stem import WordNetLemmatizer
@@ -16,15 +16,10 @@ from sklearn.naive_bayes import MultinomialNB
 import joblib
 import os
 
-# --- Download NLTK resource ---
+# --- Setup NLTK resource directory (local) ---
 NLTK_DATA_DIR = os.path.join(os.path.dirname(__file__), 'nltk_data')
 os.makedirs(NLTK_DATA_DIR, exist_ok=True)
 nltk.data.path.append(NLTK_DATA_DIR)
-
-try:
-    nltk.data.find('tokenizers/punkt')
-except LookupError:
-    nltk.download('punkt', download_dir=NLTK_DATA_DIR)
 
 try:
     nltk.data.find('corpora/stopwords')
@@ -35,11 +30,13 @@ try:
     nltk.data.find('corpora/wordnet')
 except LookupError:
     nltk.download('wordnet', download_dir=NLTK_DATA_DIR)
+
 # --- Setup preprocessing tools ---
 stop_words_en = set(stopwords.words('english'))
 lemmatizer = WordNetLemmatizer()
 factory = StemmerFactory()
 stemmer = factory.create_stemmer()
+tokenizer = RegexpTokenizer(r'\w+')
 
 # --- Preprocessing Functions ---
 def cleaningText(text):
@@ -56,7 +53,7 @@ def casefoldingText(text):
     return text.lower()
 
 def tokenizingText(text):
-    return word_tokenize(text)
+    return tokenizer.tokenize(text)
 
 def filteringText(tokens, stopwords_set):
     return [word for word in tokens if word not in stopwords_set]
@@ -89,6 +86,7 @@ vectorizer_path = os.path.join(BASE_DIR, "model", "vectorizer.pkl")
 
 model = joblib.load(model_path)
 vectorizer = joblib.load(vectorizer_path)
+
 # --- Streamlit UI ---
 st.title("📊 Review Sentiment Analysis App - Naive Bayes")
 
@@ -112,7 +110,7 @@ if menu == "Sentence Prediction":
         else:
             st.warning("Blank text!")
 
-elif menu == "CSV File Prediction":  # ✅ Fixed: Now using elif at the same level
+elif menu == "CSV File Prediction":
     st.subheader("📁 Upload CSV")
     st.markdown("**Attention!** The first row must contain column names!")
     st.markdown("- Line 1: `text_sentiment`")
@@ -160,22 +158,18 @@ elif menu == "CSV File Prediction":  # ✅ Fixed: Now using elif at the same lev
             sizes = pred_count.values
             colors = ['#99FF99', '#FF9999', '#66B3FF']
 
-            # Pie chart with percentage inside
             wedges, texts, autotexts = ax2.pie(
                 sizes,
                 autopct='%1.1f%%',
                 colors=colors,
-                startangle=140,  # ✅ Fixed: was "tartangle" 
+                startangle=140,
                 textprops=dict(color="black")
             )
-
-            # Legend (jumlah di luar chart)
             legend_labels = [f'{label}: {size}' for label, size in zip(labels, sizes)]
             ax2.legend(wedges, legend_labels, title="Number of Reviews", loc="center left", bbox_to_anchor=(1, 0, 0.5, 1))
-
-            ax2.axis('equal')  # Draw pie as circle
+            ax2.axis('equal')
             st.pyplot(fig2)
-            
+
             # --- Download Hasil ---
             csv_result = df[[text_col, 'Prediction']].to_csv(index=False).encode('utf-8')
             st.download_button(
