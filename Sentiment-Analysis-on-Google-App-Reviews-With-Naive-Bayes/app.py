@@ -14,6 +14,7 @@ from nltk.stem import WordNetLemmatizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
 import joblib
+import os
 
 # --- Download NLTK resource ---
 nltk.download('punkt')
@@ -68,9 +69,12 @@ def preprocess(text, lang='english'):
     return text
 
 # --- Load Model & Vectorizer ---
-model = joblib.load("./model/naive_bayes_model_ros.pkl")
-vectorizer = joblib.load("./model/vectorizer.pkl")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+model_path = os.path.join(BASE_DIR, "model", "naive_bayes_model_ros.pkl")
+vectorizer_path = os.path.join(BASE_DIR, "model", "vectorizer.pkl")
 
+model = joblib.load(model_path)
+vectorizer = joblib.load(vectorizer_path)
 # --- Streamlit UI ---
 st.title("📊 Review Sentiment Analysis App - Naive Bayes")
 
